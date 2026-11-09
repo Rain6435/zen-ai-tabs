@@ -106,16 +106,26 @@ export async function callGemini(compressed, apiKey, model = 'gemini-3.1-flash-l
 }
 
 // Claude: single enforced tool call. Haiku 5.5 only.
-export async function callClaude(compressed, apiKey, model = 'claude-haiku-5-5', existingGroups = []) {
+// credential: API key string, or { type: 'apikey' | 'oauth', token }.
+// OAuth (Claude Pro/Max, from ~/.claude/.credentials.json) is Bearer-auth with the oauth beta flag,
+// the same mechanism jobby's ANTHROPIC_AUTH_TOKEN path uses. Restricted to Haiku, as jobby does:
+// non-Haiku models return a generic 400 for OAuth tokens outside the Claude Code client.
+export async function callClaude(compressed, credential, model = 'claude-haiku-5-5', existingGroups = []) {
   const TOOL = 'apply_tab_groups';
-  const data = await post(
-    'https://api.anthropic.com/v1/messages',
-    {
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
-    },
-    {
+  const auth = typeof credential === 'string' ? { type: 'apikey', token: credential } : credential;
+  if (auth.type === 'oauth' && !/haiku/i.test(model)) {
+    throw new ProviderError('Claude OAuth tokens are limited to Haiku models. Set the model to claude-haiku-5-5.');
+  }
+  const headers =
+    auth.type === 'oauth'
+      ? { authorization: `Bearer ${auth.token}`, 'anthropic-beta': 'oauth-2025-04-20' }
+      : { 'x-api-key': auth.token };
+  headers['anthropic-version'] = '2023-06-01';
+  headers['anthropic-dangerous-direct-browser-access'] = 'true';
+
+  let data;
+  try {
+    data = await post('https://api.anthropic.com/v1/messages', headers, {
       model,
       max_tokens: 1024,
       temperature: 0,
@@ -123,8 +133,19 @@ export async function callClaude(compressed, apiKey, model = 'claude-haiku-5-5',
       tools: [{ name: TOOL, description: 'Apply the tab grouping plan.', input_schema: GROUP_SCHEMA }],
       tool_choice: { type: 'tool', name: TOOL },
       messages: [{ role: 'user', content: buildUserPrompt(compressed, existingGroups) }],
+    });
+  } catch (e) {
+    if (auth.type === 'oauth' && e.status === 401) {
+      throw new ProviderError('Claude OAuth token invalid or expired. Re-copy ~/.claude/.credentials.json in the popup.', 401);
     }
-  );
+    if (auth.type === 'oauth' && e.status === 429) {
+      throw new ProviderError(
+        'Claude subscription Code usage limit hit for this ~5-hour window. This is separate from API credits.',
+        429
+      );
+    }
+    throw e;
+  }
   const block = data?.content?.find((b) => b.type === 'tool_use' && b.name === TOOL);
   if (!block || typeof block.input !== 'object') throw new ProviderError('Claude returned no tool_use block');
   return block.input;

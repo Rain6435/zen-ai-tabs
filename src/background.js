@@ -7,16 +7,25 @@ const DEFAULT_MODELS = { gemini: 'gemini-3.1-flash-lite', claude: 'claude-haiku-
 async function loadSettings() {
   const { settings = {} } = await browser.storage.local.get('settings');
   const provider = settings.provider || 'gemini';
+  let credential = settings.keys?.[provider] || '';
+  if (provider === 'claude' && settings.claudeAuth === 'oauth') {
+    const o = settings.oauth || {};
+    if (!o.accessToken) throw new Error('No Claude OAuth token saved. Paste ~/.claude/.credentials.json in the popup.');
+    if (o.expiresAt && o.expiresAt < Date.now()) {
+      throw new Error('Claude OAuth token expired. Run `claude` to re-authenticate, then re-copy ~/.claude/.credentials.json.');
+    }
+    credential = { type: 'oauth', token: o.accessToken };
+  }
   return {
     provider,
-    apiKey: settings.keys?.[provider] || '',
+    apiKey: credential,
     model: settings.models?.[provider] || DEFAULT_MODELS[provider],
   };
 }
 
 async function tidy(windowId) {
   const { provider, apiKey, model } = await loadSettings();
-  if (!apiKey) throw new Error(`No API key set for ${provider}`);
+  if (!apiKey || (typeof apiKey === 'object' && !apiKey.token)) throw new Error(`No API key set for ${provider}`);
 
   const t0 = performance.now();
   const state = await captureSanitizedState(windowId);

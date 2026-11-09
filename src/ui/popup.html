@@ -4,38 +4,54 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Zen AI Tabs</title>
-<style>
-  :root { --bg:#fbfbfc; --fg:#1d1d21; --muted:#6b6b76; --line:#e3e3e8; --accent:#3b6ef5; --err:#c2362b; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#1f1f24; --fg:#ececf1; --muted:#9a9aa6; --line:#34343c; --accent:#7ea0ff; --err:#ff7a70; } }
-  body { margin:0; width:300px; padding:12px; font:13px/1.4 system-ui, sans-serif; background:var(--bg); color:var(--fg); }
-  h1 { font-size:14px; margin:0 0 10px; font-weight:600; }
-  label { display:block; font-size:11px; color:var(--muted); margin:8px 0 3px; }
-  select, input { width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:transparent; color:var(--fg); font:inherit; }
-  .row { display:flex; gap:6px; margin-top:12px; }
-  button { flex:1; padding:7px; border-radius:6px; border:1px solid var(--line); background:transparent; color:var(--fg); font:inherit; cursor:pointer; }
-  button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
-  button:disabled { opacity:.5; cursor:default; }
-  #status { margin-top:10px; min-height:18px; color:var(--muted); font-size:12px; white-space:pre-wrap; }
-  #status.err { color:var(--err); }
-</style>
+<link rel="stylesheet" href="popup.css">
 </head>
 <body>
-<h1>Zen AI Tabs</h1>
-<label for="provider">Provider</label>
-<select id="provider">
-  <option value="gemini">Google Gemini</option>
-  <option value="claude">Anthropic Claude</option>
-  <option value="openai">OpenAI</option>
-</select>
-<label for="key">API key (stored locally)</label>
-<input id="key" type="password" autocomplete="off" spellcheck="false">
-<label for="model">Model (blank = default)</label>
-<input id="model" type="text" autocomplete="off" spellcheck="false">
-<div class="row">
-  <button id="tidy" class="primary">Tidy Ungrouped</button>
-  <button id="undo">Undo</button>
+<header>
+  <div class="mark" aria-hidden="true">Z</div>
+  <div>
+    <h1>Zen AI Tabs</h1>
+    <div class="subtitle">Group ungrouped tabs with AI</div>
+  </div>
+</header>
+
+<main class="card">
+  <label class="field">
+    <span>Provider</span>
+    <select id="provider">
+      <option value="gemini">Google Gemini</option>
+      <option value="claude">Anthropic Claude</option>
+      <option value="openai">OpenAI</option>
+    </select>
+  </label>
+
+  <label class="field">
+    <span>API key</span>
+    <input id="key" type="password" autocomplete="off" spellcheck="false">
+    <span class="hint">Stored locally in this browser only.</span>
+  </label>
+
+  <label id="oauthRow" class="switch" hidden>
+    <span>Claude OAuth (Pro/Max), not an API key</span>
+    <input id="oauthToggle" type="checkbox">
+    <span class="track" aria-hidden="true"></span>
+  </label>
+  <div id="oauthInfo" class="hint" hidden></div>
+
+  <label class="field">
+    <span>Model</span>
+    <input id="model" type="text" autocomplete="off" spellcheck="false">
+    <span class="hint">Leave blank for the default.</span>
+  </label>
+</main>
+
+<div class="actions">
+  <button id="tidy" class="primary">Tidy ungrouped</button>
+  <button id="undo" class="ghost">Undo</button>
 </div>
-<div id="status"></div>
+
+<div id="status" role="status" aria-live="polite"></div>
+
 <script type="module" src="popup.js"></script>
 </body>
 </html>

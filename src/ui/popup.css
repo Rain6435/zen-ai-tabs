@@ -1,0 +1,144 @@
+:root {
+  --bg: #f6f6f8;
+  --surface: #ffffff;
+  --fg: #17171c;
+  --muted: #6a6a75;
+  --line: #e2e2e8;
+  --accent: #3b6ef5;
+  --accent-fg: #ffffff;
+  --accent-soft: #e8efff;
+  --ok: #1f8a4c;
+  --err: #c2362b;
+  --radius: 10px;
+  --focus: 0 0 0 3px rgba(59, 110, 245, 0.25);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #17171b;
+    --surface: #222228;
+    --fg: #ececf1;
+    --muted: #9b9ba8;
+    --line: #34343d;
+    --accent: #7ea0ff;
+    --accent-fg: #101424;
+    --accent-soft: #263150;
+    --ok: #5fd08a;
+    --err: #ff7a70;
+    --focus: 0 0 0 3px rgba(126, 160, 255, 0.3);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #17171b;
+  --surface: #222228;
+  --fg: #ececf1;
+  --muted: #9b9ba8;
+  --line: #34343d;
+  --accent: #7ea0ff;
+  --accent-fg: #101424;
+  --accent-soft: #263150;
+  --ok: #5fd08a;
+  --err: #ff7a70;
+  --focus: 0 0 0 3px rgba(126, 160, 255, 0.3);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  width: 320px;
+  padding: 14px;
+  background: var(--bg);
+  color: var(--fg);
+  font: 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.mark {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 14px;
+}
+h1 { font-size: 14px; margin: 0; font-weight: 650; }
+.subtitle { font-size: 11px; color: var(--muted); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.field { display: grid; gap: 4px; }
+.field > span:not(.hint) { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: .02em; text-transform: uppercase; }
+
+select, input[type="text"], input[type="password"] {
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+select:focus, input:focus { border-color: var(--accent); box-shadow: var(--focus); }
+input::placeholder { color: var(--muted); opacity: .8; }
+
+.hint { font-size: 11px; color: var(--muted); }
+
+.switch {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-size: 12px; cursor: pointer; user-select: none;
+}
+.switch input { position: absolute; opacity: 0; pointer-events: none; }
+.switch .track {
+  flex: none; width: 30px; height: 18px; border-radius: 999px;
+  background: var(--line); position: relative; transition: background .15s;
+}
+.switch .track::after {
+  content: ""; position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; border-radius: 50%; background: #fff;
+  transition: transform .15s;
+}
+.switch input:checked + .track { background: var(--accent); }
+.switch input:checked + .track::after { transform: translateX(12px); }
+.switch input:focus-visible + .track { box-shadow: var(--focus); }
+
+.actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 12px; }
+button {
+  font: inherit; font-weight: 600;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+  transition: filter .15s, opacity .15s;
+}
+button:hover:not(:disabled) { filter: brightness(0.97); }
+button:focus-visible { outline: none; box-shadow: var(--focus); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+button.ghost { padding-inline: 14px; }
+
+#status {
+  margin-top: 10px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  white-space: pre-line;
+}
+#status:empty { display: none; }
+#status[data-state="ok"] { background: var(--accent-soft); color: var(--ok); }
+#status[data-state="err"] { background: var(--accent-soft); color: var(--err); }
+#status[data-state="busy"] { background: var(--accent-soft); color: var(--accent); }
+
+[hidden] { display: none !important; }
