@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Zen AI Tabs",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "BYOK AI tab grouping for Zen/Firefox. Sanitized, schema-validated, snapshot-backed undo.",
   "browser_specific_settings": {
     "gecko": {
@@ -10,6 +10,7 @@
     }
   },
   "permissions": ["tabs", "tabGroups", "storage"],
+  "optional_permissions": ["trialML"],
   "host_permissions": [
     "https://generativelanguage.googleapis.com/*",
     "https://api.anthropic.com/*",

@@ -30,6 +30,9 @@ async function refreshFields() {
   $('key').placeholder = oauthOn ? 'OAuth token saved (paste to replace)' : 'API key';
   $('model').value = s.models?.[p] || '';
   $('model').placeholder = DEFAULTS[p];
+  const isLocal = p === 'local';
+  $('keyField').hidden = isLocal;
+  $('modelField').hidden = isLocal;
   $('oauthRow').hidden = !isClaude;
   $('oauthToggle').checked = oauthOn;
   const info = $('oauthInfo');
@@ -98,6 +101,18 @@ function setBusy(busy) {
 }
 
 $('tidy').addEventListener('click', async () => {
+  const s = await loadSettings();
+  if ((s.provider || 'gemini') === 'local') {
+    // Must run in the click's user gesture; optional permission gates the trial API.
+    if (typeof browser.trial?.ml?.createEngine !== 'function') {
+      return setStatus(
+        'Firefox on-device AI not available. Set browser.ml.enable and extensions.ml.enabled to true in about:config, then restart.',
+        'err'
+      );
+    }
+    const granted = await browser.permissions.request({ permissions: ['trialML'] });
+    if (!granted) return setStatus('Permission trialML was not granted', 'err');
+  }
   setBusy(true);
   setStatus('Grouping tabs…', 'busy');
   try {

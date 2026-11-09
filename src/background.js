@@ -1,4 +1,5 @@
 import { callProvider, validateGroups } from './adapters/aiProvider.js';
+import { classifyLocal } from './adapters/localFirefox.js';
 import { toPromptLines } from './core/sanitize.js';
 import { withLock, captureSanitizedState, applyGroupDiff, rollbackLastState, listSnapshots } from './core/tabManager.js';
 
@@ -25,7 +26,10 @@ async function loadSettings() {
 
 async function tidy(windowId) {
   const { provider, apiKey, model } = await loadSettings();
-  if (!apiKey || (typeof apiKey === 'object' && !apiKey.token)) throw new Error(`No API key set for ${provider}`);
+  const needsKey = provider !== 'local';
+  if (needsKey && (!apiKey || (typeof apiKey === 'object' && !apiKey.token))) {
+    throw new Error(`No API key set for ${provider}`);
+  }
 
   const t0 = performance.now();
   const state = await captureSanitizedState(windowId);
@@ -33,7 +37,10 @@ async function tidy(windowId) {
   if (state.tabs.length < 2) return { ok: true, groups: 0, tabs: 0, msg: 'Nothing to group' };
 
   const allowed = new Set(state.tabs.map((t) => t.id));
-  const raw = await callProvider(provider, state.compressed, apiKey, model, state.existingGroups);
+  const raw =
+    provider === 'local'
+      ? await classifyLocal(state.compressed, state.existingGroups.map((g) => g.name))
+      : await callProvider(provider, state.compressed, apiKey, model, state.existingGroups);
   const t2 = performance.now();
   const { groups, dropped } = validateGroups(raw, allowed);
 
