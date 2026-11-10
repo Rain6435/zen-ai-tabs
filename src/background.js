@@ -17,11 +17,12 @@ async function loadSettings() {
     }
     credential = { type: 'oauth', token: o.accessToken };
   }
-  return {
-    provider,
-    apiKey: credential,
-    model: settings.models?.[provider] || DEFAULT_MODELS[provider],
-  };
+  let model = settings.models?.[provider] || DEFAULT_MODELS[provider];
+  // Haiku 5.5 rejects Claude OAuth tokens here; Haiku 4.5 is the model verified to accept them.
+  if (provider === 'claude' && credential?.type === 'oauth' && !settings.models?.claude) {
+    model = 'claude-haiku-4-5-20251001';
+  }
+  return { provider, apiKey: credential, model };
 }
 
 async function tidy(windowId) {

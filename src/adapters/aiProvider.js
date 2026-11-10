@@ -136,7 +136,8 @@ export async function callClaude(compressed, credential, model = 'claude-haiku-5
     });
   } catch (e) {
     if (auth.type === 'oauth' && e.status === 401) {
-      throw new ProviderError('Claude OAuth token invalid or expired. Re-copy ~/.claude/.credentials.json in the popup.', 401);
+      // Keep Anthropic's own error text so the cause (token vs model) is visible.
+      throw new ProviderError(`Claude OAuth rejected (${e.message}). If the token is fresh, check the model is claude-haiku-4-5-20251001.`, 401);
     }
     if (auth.type === 'oauth' && e.status === 429) {
       throw new ProviderError(
